@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using EPiServer.Core;
+using EPiServer.ServiceLocation;
 using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
@@ -25,7 +26,13 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         ContentReference ContentReference { get; set; }
     }
 
-    public class IndexableTypeMapperHelper
+    public interface IIndexableTypeMapperHelper
+    {
+        IEnumerable<IIndexableTypeMapper> GetAll();
+    }
+
+    [ServiceConfiguration(typeof(IIndexableTypeMapperHelper), Lifecycle = ServiceInstanceScope.Singleton)]
+    public class AssemblyScanIndexableTypeMapperHelper : IIndexableTypeMapperHelper
     {
         public IEnumerable<IIndexableTypeMapper> GetAll()
         {
