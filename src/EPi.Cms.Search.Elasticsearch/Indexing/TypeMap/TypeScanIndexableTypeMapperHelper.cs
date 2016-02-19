@@ -1,38 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using EPiServer.Core;
 using EPiServer.ServiceLocation;
-using Nest;
 
-namespace EPi.Cms.Search.Elasticsearch.Indexing
+namespace EPi.Cms.Search.Elasticsearch.Indexing.TypeMap
 {
-    public interface IIndexableTypeMapper
-    {
-        IPutMappingRequest CreateTypeMapping(CultureInfo cultureInfo);
-    }
-
-    public interface IIndexablePageData : IIndexableTypeMapper
-    {
-        IPageDataIndexModel CreateIndexModel(CultureInfo cultureInfo);
-        bool ShouldIndex(CultureInfo cultureInfo);
-    }            
-
-    public interface IPageDataIndexModel
-    {
-        Guid Id { get; set; }
-        ContentReference ContentReference { get; set; }
-    }
-
-    public interface IIndexableTypeMapperHelper
-    {
-        IEnumerable<IIndexableTypeMapper> GetAll();
-    }
-
     [ServiceConfiguration(typeof(IIndexableTypeMapperHelper), Lifecycle = ServiceInstanceScope.Singleton)]
-    public class AssemblyScanIndexableTypeMapperHelper : IIndexableTypeMapperHelper
+    public class TypeScanIndexableTypeMapperHelper : IIndexableTypeMapperHelper
     {
         public IEnumerable<IIndexableTypeMapper> GetAll()
         {

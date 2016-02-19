@@ -173,7 +173,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IndexablePageDataTests.cs" />
-    <Compile Include="AssemblyScanIndexableTypeMapperHelperTests.cs" />
+    <Compile Include="TypeScanIndexableTypeMapperHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

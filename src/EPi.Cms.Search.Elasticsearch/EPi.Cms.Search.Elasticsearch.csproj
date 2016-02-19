@@ -156,7 +156,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Indexing\IPageDataIndexer.cs" />
+    <Compile Include="Indexing\IIndexablePageData.cs" />
+    <Compile Include="Indexing\PageDataIndexer.cs" />
+    <Compile Include="Indexing\TypeMap\IIndexableTypeMapper.cs" />
+    <Compile Include="Indexing\TypeMap\IIndexableTypeMapperHelper.cs" />
+    <Compile Include="Indexing\TypeMap\TypeScanIndexableTypeMapperHelper.cs" />
+    <Compile Include="Indexing\IPageDataIndexModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
