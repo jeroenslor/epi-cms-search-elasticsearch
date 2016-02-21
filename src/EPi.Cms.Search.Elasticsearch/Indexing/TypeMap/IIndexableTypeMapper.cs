@@ -5,7 +5,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing.TypeMap
 {
     public interface IIndexableTypeMapper
     {
-        string TypeName { get; }
+        TypeName TypeName { get; }
         ITypeMapping CreateTypeMapping(CultureInfo cultureInfo);
     }
 }

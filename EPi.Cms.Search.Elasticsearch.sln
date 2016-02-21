@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPi.Cms.Search.Elasticsearch", "src\EPi.Cms.Search.Elasticsearch\EPi.Cms.Search.Elasticsearch.csproj", "{7B080504-B422-4855-8EE7-9B1CFE68E3E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPi.Cms.Search.Elasticsearch.UnitTest", "EPi.Cms.Search.Elasticsearch.UnitTest\EPi.Cms.Search.Elasticsearch.UnitTest.csproj", "{B69D4D8F-DAF9-4F45-A462-625C96EE521B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPi.Cms.Search.Elasticsearch.UnitTest", "src\EPi.Cms.Search.Elasticsearch.UnitTest\EPi.Cms.Search.Elasticsearch.UnitTest.csproj", "{B69D4D8F-DAF9-4F45-A462-625C96EE521B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CF29096C-20AD-41C9-8768-97FECAA819DA}"
 EndProject

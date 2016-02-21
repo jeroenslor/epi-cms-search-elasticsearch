@@ -105,18 +105,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                 if (!hasErrors || swapWithErrors)
                     SwapIndex(liveIndexName, aliasName, reIndexName);
             }
-        }
-
-        private static BulkCreateOperation<IPageDataIndexModel> CreateBulkOperation(ICollection<IBulkOperation> bulkOperations, IPageDataIndexModel indexModel)
-        {
-            var bulkCreateOperation = new BulkCreateOperation<IPageDataIndexModel>(indexModel)
-            {
-                Type = (TypeName)indexModel
-            };
-            bulkOperations.Add(bulkCreateOperation);
-
-            return bulkCreateOperation;
-        }
+        }       
 
         protected virtual IEnumerable<IIndexablePageData> GetIndexablePages(CultureInfo language)
         {
@@ -128,13 +117,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 
                 yield return indexablePageData;
             }
-        }
-
-        private void Clear(string name, CultureInfo language)
-        {
-            DeleteIndex(name);
-            CreateIndex(name, language);
-        }        
+        }                
 
         protected virtual MappingsDescriptor CreateMappingsDescriptor(CultureInfo language)
         {
@@ -193,6 +176,23 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
             if (!createAliasResponse.IsValid)
                 throw new InvalidOperationException(
                     $"Unable to create alias with name: {alias}, server error: {createAliasResponse.ServerError}, request information: {createAliasResponse.DebugInformation}");
+        }
+
+        private void Clear(string name, CultureInfo language)
+        {
+            DeleteIndex(name);
+            CreateIndex(name, language);
+        }
+
+        private static BulkCreateOperation<IPageDataIndexModel> CreateBulkOperation(ICollection<IBulkOperation> bulkOperations, IPageDataIndexModel indexModel)
+        {
+            var bulkCreateOperation = new BulkCreateOperation<IPageDataIndexModel>(indexModel)
+            {
+                Type = (TypeName)indexModel
+            };
+            bulkOperations.Add(bulkCreateOperation);
+
+            return bulkCreateOperation;
         }
     }
 }

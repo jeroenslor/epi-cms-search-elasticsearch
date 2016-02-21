@@ -49,7 +49,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             return true;
         }
 
-        public string TypeName => "test_page";
+        public TypeName TypeName => TypeName.From<TestPageIndexModel>();
 
         public ITypeMapping CreateTypeMapping(CultureInfo cultureInfo)
         {
