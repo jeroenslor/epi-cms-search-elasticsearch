@@ -156,8 +156,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Indexing\DefaultCmsElasticSearchOptions.cs" />
-    <Compile Include="Indexing\ICmsElasticSearchOptions.cs" />
+    <Compile Include="Indexing\CmsElasticSearchOptions.cs" />
     <Compile Include="Indexing\IIndexablePageData.cs" />
     <Compile Include="Indexing\PageDataIndexer.cs" />
     <Compile Include="Indexing\TypeMap\IIndexableTypeMapper.cs" />

@@ -16,12 +16,12 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         protected readonly ILanguageBranchRepository LanguageBranchRepository;
         protected readonly IIndexableTypeMapperHelper TypeMapperHelper;
         protected readonly IElasticClient ElasticClient;
-        protected readonly ICmsElasticSearchOptions Options;
+        protected readonly CmsElasticSearchOptions Options;
         private readonly IContentRepository _contentRepository;
         private readonly ILogger _logger;
         protected readonly IIndexableTypeMapper[] IndexableTypeMappers;
 
-        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperHelper typeMapperHelper, IElasticClient elasticClient, ICmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
+        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperHelper typeMapperHelper, IElasticClient elasticClient, CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
         {
             LanguageBranchRepository = languageBranchRepository;
             TypeMapperHelper = typeMapperHelper;
@@ -87,15 +87,11 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                         throw;
                     }
 
-                    var bulkCreateOperation = new BulkCreateOperation<IPageDataIndexModel>(indexModel)
-                    {
-                        Type = (TypeName)indexModel
-                    };
-                    bulkOperations.Add(bulkCreateOperation);
+                    bulkOperations.Add(CreateBulkOperation(bulkOperations, indexModel));
 
                     if (bulkOperations.Count == Options.BulkSize || i == indexablePages.Length - 1)
                     {
-                        var bulkRequest = new BulkRequest(reIndexName) {Operations = bulkOperations};
+                        var bulkRequest = new BulkRequest(reIndexName) { Operations = bulkOperations };
                         var bulkResponse = ElasticClient.Bulk(bulkRequest);
                         if (!bulkResponse.IsValid || bulkResponse.Errors)
                             hasErrors = true;
@@ -109,6 +105,17 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                 if (!hasErrors || swapWithErrors)
                     SwapIndex(liveIndexName, aliasName, reIndexName);
             }
+        }
+
+        private static BulkCreateOperation<IPageDataIndexModel> CreateBulkOperation(ICollection<IBulkOperation> bulkOperations, IPageDataIndexModel indexModel)
+        {
+            var bulkCreateOperation = new BulkCreateOperation<IPageDataIndexModel>(indexModel)
+            {
+                Type = (TypeName)indexModel
+            };
+            bulkOperations.Add(bulkCreateOperation);
+
+            return bulkCreateOperation;
         }
 
         protected virtual IEnumerable<IIndexablePageData> GetIndexablePages(CultureInfo language)

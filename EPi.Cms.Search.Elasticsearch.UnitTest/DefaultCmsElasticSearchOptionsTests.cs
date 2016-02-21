@@ -8,7 +8,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
         [Fact]
         public static void IndexName_Should_Return_Site()
         {
-            var options = new DefaultCmsElasticSearchOptions();
+            var options = new CmsElasticSearchOptions();
             Assert.Equal("site" , options.IndexName);
         }
     }
