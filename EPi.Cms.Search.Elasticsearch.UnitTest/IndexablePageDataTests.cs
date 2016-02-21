@@ -33,8 +33,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             var typeMapping = testPage.CreateTypeMapping(new CultureInfo("en"));
 
             Assert.NotNull(typeMapping);
-            Assert.IsType<PutMappingDescriptor<TestPageIndexModel>>(typeMapping);
-            Assert.Equal(typeMapping.Type.Type, typeof(TestPageIndexModel));
+            Assert.IsType<TypeMappingDescriptor<TestPageIndexModel>>(typeMapping);
         }
     }
 
@@ -50,9 +49,11 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             return true;
         }
 
-        public IPutMappingRequest CreateTypeMapping(CultureInfo cultureInfo)
+        public string TypeName => "test_page";
+
+        public ITypeMapping CreateTypeMapping(CultureInfo cultureInfo)
         {
-            return new PutMappingDescriptor<TestPageIndexModel>().AutoMap();
+            return new TypeMappingDescriptor<TestPageIndexModel>().AutoMap();
         }
     }
 

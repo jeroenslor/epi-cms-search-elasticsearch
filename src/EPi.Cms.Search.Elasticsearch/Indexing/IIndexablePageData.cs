@@ -6,6 +6,6 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
     public interface IIndexablePageData : IIndexableTypeMapper
     {
         IPageDataIndexModel CreateIndexModel(CultureInfo cultureInfo);
-        bool ShouldIndex(CultureInfo cultureInfo);
+        bool ShouldIndex(CultureInfo cultureInfo);        
     }
 }

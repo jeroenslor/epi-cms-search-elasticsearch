@@ -172,12 +172,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DefaultCmsElasticSearchOptionsTests.cs" />
     <Compile Include="IndexablePageDataTests.cs" />
     <Compile Include="TypeScanIndexableTypeMapperHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
