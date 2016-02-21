@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using EPi.Cms.Search.Elasticsearch.Indexing.TypeMap;
+using EPiServer;
+using EPiServer.Core;
 using EPiServer.DataAbstraction;
+using EPiServer.Logging;
 using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
@@ -14,14 +17,18 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         protected readonly IIndexableTypeMapperHelper TypeMapperHelper;
         protected readonly IElasticClient ElasticClient;
         protected readonly ICmsElasticSearchOptions Options;
+        private readonly IContentRepository _contentRepository;
+        private readonly ILogger _logger;
         protected readonly IIndexableTypeMapper[] IndexableTypeMappers;
 
-        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperHelper typeMapperHelper, IElasticClient elasticClient, ICmsElasticSearchOptions options)
+        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperHelper typeMapperHelper, IElasticClient elasticClient, ICmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
         {
             LanguageBranchRepository = languageBranchRepository;
             TypeMapperHelper = typeMapperHelper;
             ElasticClient = elasticClient;
             Options = options;
+            _contentRepository = contentRepository;
+            _logger = logger;
 
             IndexableTypeMappers = TypeMapperHelper.GetAll().ToArray();
         }
@@ -33,7 +40,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         /// <param name="onStatusChanges">the action that is executed on status changed during the index process</param>
         /// <returns></returns>
         IEnumerable<IBulkResponse> IndexPageTree(bool swapWithErrors = false, Action<string> onStatusChanges = null)
-        {            
+        {
             foreach (var languageBranch in LanguageBranchRepository.ListEnabled())
             {
                 var language = languageBranch.Culture;
@@ -49,18 +56,71 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                 if (!ElasticClient.IndexExists(indexName2).Exists)
                     CreateIndex(indexName2, language);
 
-                if (!ElasticClient.AliasExists(x=> x.Name(aliasName)).Exists)
+                if (!ElasticClient.AliasExists(x => x.Name(aliasName)).Exists)
                     CreateAlias(aliasName, indexName1);
 
                 var aliasIndices = ElasticClient.GetAlias(x => x.Alias(aliasName)).Indices;
                 var liveIndexName = aliasIndices.First().Key;
-                var reIndexName = liveIndexName.Equals(indexName1) ? indexName2 : indexName1;                
+                var reIndexName = liveIndexName.Equals(indexName1) ? indexName2 : indexName1;
 
                 // clear the reIndex indice since we are re-building it
                 Clear(reIndexName, language);
-            }
 
-            throw new NotImplementedException();
+                var indexablePages = GetIndexablePages(language).ToArray();
+                var bulkOperations = new List<IBulkOperation>();
+                bool hasErrors = false;
+
+                for (var i = 0; i < indexablePages.Length; i++)
+                {
+                    var indexablePageData = indexablePages[i];
+                    if (!indexablePageData.ShouldIndex(language))
+                        continue;
+
+                    IPageDataIndexModel indexModel;
+                    try
+                    {
+                        indexModel = indexablePageData.CreateIndexModel(language);
+                    }
+                    catch (Exception)
+                    {
+                        _logger.Error($"Failed to create index model for page with name: {indexablePageData.Name} and contentlink id: {indexablePageData.ContentLink.ID}");
+                        throw;
+                    }
+
+                    var bulkCreateOperation = new BulkCreateOperation<IPageDataIndexModel>(indexModel)
+                    {
+                        Type = (TypeName)indexModel
+                    };
+                    bulkOperations.Add(bulkCreateOperation);
+
+                    if (bulkOperations.Count == Options.BulkSize || i == indexablePages.Length - 1)
+                    {
+                        var bulkRequest = new BulkRequest(reIndexName) {Operations = bulkOperations};
+                        var bulkResponse = ElasticClient.Bulk(bulkRequest);
+                        if (!bulkResponse.IsValid || bulkResponse.Errors)
+                            hasErrors = true;
+
+                        yield return bulkResponse;
+                    }
+
+                    onStatusChanges?.Invoke($"Insterted bulk into {reIndexName} currentIndex: {i}");
+                }
+
+                if (!hasErrors || swapWithErrors)
+                    SwapIndex(liveIndexName, aliasName, reIndexName);
+            }
+        }
+
+        protected virtual IEnumerable<IIndexablePageData> GetIndexablePages(CultureInfo language)
+        {
+            foreach (var pageReference in _contentRepository.GetDescendents(PageReference.RootPage))
+            {
+                var indexablePageData = _contentRepository.Get<PageData>(pageReference, language) as IIndexablePageData;
+                if (indexablePageData == null)
+                    continue;
+
+                yield return indexablePageData;
+            }
         }
 
         private void Clear(string name, CultureInfo language)
@@ -106,7 +166,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         protected virtual string GetIndexName(CultureInfo language, int slotNumber)
         {
             return $"{GetAliasName(language)}_{slotNumber}";
-        }
+        }        
 
         private void SwapIndex(string liveIndexName, string alias, string reIndexName)
         {

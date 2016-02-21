@@ -3,5 +3,6 @@
     public interface ICmsElasticSearchOptions
     {
         string IndexName { get; }
+        int BulkSize { get; }
     }
 }

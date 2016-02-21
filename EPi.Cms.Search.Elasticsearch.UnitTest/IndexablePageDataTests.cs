@@ -37,7 +37,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
         }
     }
 
-    public class TestPage : IIndexablePageData
+    public class TestPage : PageData, IIndexablePageData
     {
         public IPageDataIndexModel CreateIndexModel(CultureInfo cultureInfo)
         {

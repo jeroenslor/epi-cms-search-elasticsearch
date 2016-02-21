@@ -6,5 +6,6 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
     public class DefaultCmsElasticSearchOptions : ICmsElasticSearchOptions
     {
         public string IndexName => "site";
+        public int BulkSize => 100;
     }
 }
