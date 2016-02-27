@@ -6,8 +6,8 @@ using EPiServer.ServiceLocation;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing.TypeMap
 {
-    [ServiceConfiguration(typeof(IIndexableTypeMapperHelper), Lifecycle = ServiceInstanceScope.Singleton)]
-    public class TypeScanIndexableTypeMapperHelper : IIndexableTypeMapperHelper
+    [ServiceConfiguration(typeof(IIndexableTypeMapperResolver), Lifecycle = ServiceInstanceScope.Singleton)]
+    public class TypeScanIndexableTypeMapperResolver : IIndexableTypeMapperResolver
     {
         public IEnumerable<IIndexableTypeMapper> GetAll()
         {

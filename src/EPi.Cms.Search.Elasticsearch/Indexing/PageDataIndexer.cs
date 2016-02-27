@@ -14,23 +14,23 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
     public class PageDataIndexer
     {
         protected readonly ILanguageBranchRepository LanguageBranchRepository;
-        protected readonly IIndexableTypeMapperHelper TypeMapperHelper;
+        protected readonly IIndexableTypeMapperResolver TypeMapperResolver;
         protected readonly IElasticClient ElasticClient;
         protected readonly CmsElasticSearchOptions Options;
         private readonly IContentRepository _contentRepository;
         private readonly ILogger _logger;
         protected readonly IIndexableTypeMapper[] IndexableTypeMappers;
 
-        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperHelper typeMapperHelper, IElasticClient elasticClient, CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
+        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperResolver typeMapperResolver, IElasticClient elasticClient, CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
         {
             LanguageBranchRepository = languageBranchRepository;
-            TypeMapperHelper = typeMapperHelper;
+            TypeMapperResolver = typeMapperResolver;
             ElasticClient = elasticClient;
             Options = options;
             _contentRepository = contentRepository;
             _logger = logger;
 
-            IndexableTypeMappers = TypeMapperHelper.GetAll().ToArray();
+            IndexableTypeMappers = TypeMapperResolver.GetAll().ToArray();
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         /// <param name="swapWithErrors">if set to <c>true</c> and if an error occured during the index process the new index is swapped to live</param>
         /// <param name="onStatusChanges">the action that is executed on status changed during the index process</param>
         /// <returns></returns>
-        IEnumerable<IBulkResponse> IndexPageTree(bool swapWithErrors = false, Action<string> onStatusChanges = null)
+        public IEnumerable<IBulkResponse> IndexPageTree(bool swapWithErrors = false, Action<string> onStatusChanges = null)
         {
             foreach (var languageBranch in LanguageBranchRepository.ListEnabled())
             {
@@ -87,7 +87,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                         throw;
                     }
 
-                    bulkOperations.Add(CreateBulkOperation(bulkOperations, indexModel));
+                    bulkOperations.Add(CreateBulkOperation(indexModel));
 
                     if (bulkOperations.Count == Options.BulkSize || i == indexablePages.Length - 1)
                     {
@@ -95,6 +95,8 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                         var bulkResponse = ElasticClient.Bulk(bulkRequest);
                         if (!bulkResponse.IsValid || bulkResponse.Errors)
                             hasErrors = true;
+
+                        bulkOperations.Clear();
 
                         yield return bulkResponse;
                     }
@@ -184,13 +186,12 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
             CreateIndex(name, language);
         }
 
-        private static BulkCreateOperation<IPageDataIndexModel> CreateBulkOperation(ICollection<IBulkOperation> bulkOperations, IPageDataIndexModel indexModel)
+        private static BulkCreateOperation<IPageDataIndexModel> CreateBulkOperation(IPageDataIndexModel indexModel)
         {
             var bulkCreateOperation = new BulkCreateOperation<IPageDataIndexModel>(indexModel)
             {
-                Type = (TypeName)indexModel
+                Type = TypeName.Create(indexModel.GetType())
             };
-            bulkOperations.Add(bulkCreateOperation);
 
             return bulkCreateOperation;
         }

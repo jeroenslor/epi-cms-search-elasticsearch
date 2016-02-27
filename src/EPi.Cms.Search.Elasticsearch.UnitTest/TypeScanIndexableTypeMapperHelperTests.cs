@@ -10,7 +10,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
         [Fact]
         public static void GetAll_Should_Return_New_Instance_Of_TestPage()
         {
-            var helper = new TypeScanIndexableTypeMapperHelper();
+            var helper = new TypeScanIndexableTypeMapperResolver();
             var indexableTypeMappers = helper.GetAll().ToList();
 
             Assert.Equal(1, indexableTypeMappers.Count);

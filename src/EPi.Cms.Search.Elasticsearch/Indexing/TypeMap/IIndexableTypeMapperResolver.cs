@@ -2,7 +2,7 @@
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing.TypeMap
 {
-    public interface IIndexableTypeMapperHelper
+    public interface IIndexableTypeMapperResolver
     {
         IEnumerable<IIndexableTypeMapper> GetAll();
     }
