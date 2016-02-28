@@ -60,7 +60,8 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
     public class TestPageIndexModel : IPageDataIndexModel
     {
         public Guid Id { get; set; }
-        public ContentReference ContentReference { get; set; }
+        public string ContentReference { get; set; }
+        public Guid? SiteDefinitionId { get; set; }
     }
 
 }
