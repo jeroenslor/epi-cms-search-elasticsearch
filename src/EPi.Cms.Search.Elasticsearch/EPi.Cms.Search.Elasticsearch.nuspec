@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>EPi.Cms.Search.Elasticsearch</id>
+    <version>1.0.0.0</version>
+    <title>EPiServer Elasticsearch integration</title>
+    <authors>Jeroen Slor</authors>
+    <owners>Jeroen Slor</owners>    
+    <projectUrl>https://github.com/jeroenslor/epi-cms-search-elasticsearch</projectUrl>    
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>An elasticsearch integration</description>    
+    <copyright>Copyright 2016</copyright>
+    <tags>EPiServer Search Elasticsearch</tags>
+    <dependencies>
+      <dependency id="EPiServer.CMS.Core" version="9.0" />
+    </dependencies>
+  </metadata>  
+</package>
