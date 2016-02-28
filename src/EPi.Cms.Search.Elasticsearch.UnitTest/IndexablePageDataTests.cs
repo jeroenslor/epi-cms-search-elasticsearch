@@ -39,14 +39,9 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
 
     public class TestPage : PageData, IIndexablePageData
     {
-        public virtual ContentArea TestContentArea { get; set; }
-                
         public IPageDataIndexModel CreateIndexModel()
         {
             var indexModel = new TestPageIndexModel();
-            this.SetBaseProperties(indexModel);
-
-            indexModel.TestContentArea = TestContentArea.ToIndexableString(Language);
 
             return indexModel;
         }
