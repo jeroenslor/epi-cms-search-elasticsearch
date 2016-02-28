@@ -7,5 +7,6 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
     {
         public string IndexName { get; set; } = "site";
         public int BulkSize { get; set; } = 100;
+        public bool IsEnabled { get; set; } = true;
     }
 }

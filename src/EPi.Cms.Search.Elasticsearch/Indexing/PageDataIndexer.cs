@@ -6,12 +6,15 @@ using EPi.Cms.Search.Elasticsearch.Indexing.TypeMap;
 using EPiServer;
 using EPiServer.Core;
 using EPiServer.DataAbstraction;
+using EPiServer.Framework;
+using EPiServer.Framework.Initialization;
 using EPiServer.Logging;
 using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
-    public class PageDataIndexer
+    [InitializableModule]
+    public class PageDataIndexer : IPageDataIndexer, IInitializableModule
     {
         protected readonly ILanguageBranchRepository LanguageBranchRepository;
         protected readonly IIndexableTypeMapperResolver TypeMapperResolver;
@@ -44,20 +47,11 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
             foreach (var languageBranch in LanguageBranchRepository.ListEnabled())
             {
                 var language = languageBranch.Culture;
-                var aliasName = GetAliasName(language);
+                InitializeIndex(language);
 
-                // create 2 indexes one for live and one for re-indexing
+                var aliasName = GetAliasName(language);
                 var indexName1 = GetIndexName(language, 1);
                 var indexName2 = GetIndexName(language, 2);
-
-                if (!ElasticClient.IndexExists(indexName1).Exists)
-                    CreateIndex(indexName1, language);
-
-                if (!ElasticClient.IndexExists(indexName2).Exists)
-                    CreateIndex(indexName2, language);
-
-                if (!ElasticClient.AliasExists(x => x.Name(aliasName)).Exists)
-                    CreateAlias(aliasName, indexName1);
 
                 var aliasIndices = ElasticClient.GetAlias(x => x.Alias(aliasName)).Indices;
                 var liveIndexName = aliasIndices.First().Key;
@@ -73,19 +67,10 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                 for (var i = 0; i < indexablePages.Length; i++)
                 {
                     var indexablePageData = indexablePages[i];
-                    if (!indexablePageData.ShouldIndex(language))
+                    if (!indexablePageData.ShouldIndex())
                         continue;
 
-                    IPageDataIndexModel indexModel;
-                    try
-                    {
-                        indexModel = indexablePageData.CreateIndexModel(language);
-                    }
-                    catch (Exception)
-                    {
-                        _logger.Error($"Failed to create index model for page with name: {indexablePageData.Name} and contentlink id: {indexablePageData.ContentLink.ID}");
-                        throw;
-                    }
+                    var indexModel = CreateIndexModel(indexablePageData);
 
                     bulkOperations.Add(CreateBulkOperation(indexModel));
 
@@ -108,7 +93,63 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                 if (!hasErrors || swapWithErrors)
                     SwapIndex(liveIndexName, aliasName, reIndexName);
             }
-        }       
+        }
+
+        public IIndexResponse Index(IIndexablePageData indexablePageData)
+        {
+            var pageData = indexablePageData as PageData;
+            if (pageData == null)
+                throw new ArgumentException("Should inherit from PageData", nameof(indexablePageData));
+
+            var indexModel = CreateIndexModel(indexablePageData);
+
+            return ElasticClient.Index(indexModel, x => x.Index(GetAliasName(pageData.Language)));
+        }
+
+        public IDeleteResponse Delete(IIndexablePageData indexablePageData)
+        {
+            var pageData = indexablePageData as PageData;
+            if (pageData == null)
+                throw new ArgumentException("Should inherit from PageData", nameof(indexablePageData));
+
+            return
+                ElasticClient.Delete(new DeleteRequest(GetAliasName(pageData.Language),
+                    TypeName.Create(indexablePageData.GetType()), indexablePageData.Id));
+        }
+
+        private void InitializeIndex(CultureInfo language)
+        {
+            var aliasName = GetAliasName(language);
+
+            // create 2 indexes one for live and one for re-indexing
+            var indexName1 = GetIndexName(language, 1);
+            var indexName2 = GetIndexName(language, 2);
+
+            if (!ElasticClient.IndexExists(indexName1).Exists)
+                CreateIndex(indexName1, language);
+
+            if (!ElasticClient.IndexExists(indexName2).Exists)
+                CreateIndex(indexName2, language);
+
+            if (!ElasticClient.AliasExists(x => x.Name(aliasName)).Exists)
+                CreateAlias(aliasName, indexName1);
+        }
+
+        private IPageDataIndexModel CreateIndexModel(IIndexablePageData indexablePageData)
+        {
+            IPageDataIndexModel indexModel;
+            try
+            {
+                indexModel = indexablePageData.CreateIndexModel();
+            }
+            catch (Exception)
+            {
+                _logger.Error(
+                    $"Failed to create index model for page with name: {((PageData)indexablePageData).Name} and contentlink id: {((PageData)indexablePageData).ContentLink.ID}");
+                throw;
+            }
+            return indexModel;
+        }               
 
         protected virtual IEnumerable<IIndexablePageData> GetIndexablePages(CultureInfo language)
         {
@@ -195,6 +236,52 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
             };
 
             return bulkCreateOperation;
+        }
+
+        public void Initialize(InitializationEngine context)
+        {
+            var options = context.Locate.Advanced.GetInstance<CmsElasticSearchOptions>();
+            if (!options.IsEnabled)
+                return;
+
+            // register content events
+            var contentEvents = context.Locate.ContentEvents();
+            contentEvents.SavingContent += ContentEventsOnSavingContent;
+            contentEvents.DeletingContent += ContentEventsOnDeletingContent;
+        }
+
+        private void ContentEventsOnDeletingContent(object sender, DeleteContentEventArgs deleteContentEventArgs)
+        {
+            var indexablePageData = deleteContentEventArgs.Content as IIndexablePageData;
+            if (indexablePageData == null)
+                return;
+
+            var deleteResponse = Delete(indexablePageData);
+            if (!deleteResponse.IsValid)
+                throw new InvalidOperationException(
+                    $"Failed to delete pagedata server error {deleteResponse.ServerError}, requestInfo {deleteResponse.DebugInformation}");
+        }
+
+        private void ContentEventsOnSavingContent(object sender, ContentEventArgs contentEventArgs)
+        {
+            var indexablePageData = contentEventArgs.Content as IIndexablePageData;
+            if (indexablePageData == null)
+                return;
+
+            if (!indexablePageData.ShouldIndex())
+                return;
+
+            var indexResponse = Index(indexablePageData);
+            if(!indexResponse.IsValid)
+                throw new InvalidOperationException(
+                    $"Failed to index pagedata server error {indexResponse.ServerError}, requestInfo {indexResponse.DebugInformation}");
+        }
+
+        public void Uninitialize(InitializationEngine context)
+        {
+            var contentEvents = context.Locate.ContentEvents();
+            contentEvents.SavingContent -= ContentEventsOnSavingContent;
+            contentEvents.DeletedContent -= ContentEventsOnDeletingContent;
         }
     }
 }

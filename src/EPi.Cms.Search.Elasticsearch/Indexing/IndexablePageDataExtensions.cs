@@ -1,4 +1,6 @@
-﻿using EPiServer.ServiceLocation;
+﻿using System;
+using EPiServer.Core;
+using EPiServer.ServiceLocation;
 using EPiServer.Web;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
@@ -7,13 +9,17 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
     {
         private static Injected<SiteDefinitionResolver> SiteDefinitionResolver { get; } 
 
-        public static void SetBaseProperties(this IIndexablePageData indexablePageDate, IPageDataIndexModel indexModel)
+        public static void SetBaseProperties(this IIndexablePageData indexablePageData, IPageDataIndexModel indexModel)
         {
-            indexModel.Id = indexablePageDate.ContentGuid;
-            indexModel.ContentReference = indexablePageDate.ContentLink.ToString();
+            var pageData = indexablePageData as PageData;
+            if (pageData == null)
+                throw new ArgumentException("Should inherit from PageData", nameof(indexablePageData));
 
-            var siteDefinition = SiteDefinitionResolver.Service.GetDefinitionForContent(indexablePageDate.ContentLink, false, false);
+            indexModel.Id = pageData.ContentGuid;
+            indexModel.ContentReference = pageData.ContentLink.ToString();
+
+            var siteDefinition = SiteDefinitionResolver.Service.GetDefinitionForContent(pageData.ContentLink, false, false);
             indexModel.SiteDefinitionId = siteDefinition?.Id;
-        }        
+        }
     }
 }

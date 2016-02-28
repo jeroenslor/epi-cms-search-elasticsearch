@@ -1,12 +1,12 @@
-using System.Globalization;
 using EPi.Cms.Search.Elasticsearch.Indexing.TypeMap;
-using EPiServer.Core;
+using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
-    public interface IIndexablePageData : IContent, IIndexableTypeMapper
+    public interface IIndexablePageData : IIndexableTypeMapper
     {
-        IPageDataIndexModel CreateIndexModel(CultureInfo cultureInfo);
-        bool ShouldIndex(CultureInfo cultureInfo);
+        IPageDataIndexModel CreateIndexModel();
+        bool ShouldIndex();
+        Id Id { get; }
     }
 }

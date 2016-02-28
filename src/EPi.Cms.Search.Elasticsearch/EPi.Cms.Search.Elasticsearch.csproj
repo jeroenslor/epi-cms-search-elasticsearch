@@ -162,6 +162,7 @@
     <Compile Include="Indexing\IIndexableBlockData.cs" />
     <Compile Include="Indexing\IIndexablePageData.cs" />
     <Compile Include="Indexing\IndexablePageDataExtensions.cs" />
+    <Compile Include="Indexing\IPageDataIndexer.cs" />
     <Compile Include="Indexing\PageDataIndexer.cs" />
     <Compile Include="Indexing\TypeMap\IIndexableTypeMapper.cs" />
     <Compile Include="Indexing\TypeMap\IIndexableTypeMapperResolver.cs" />
