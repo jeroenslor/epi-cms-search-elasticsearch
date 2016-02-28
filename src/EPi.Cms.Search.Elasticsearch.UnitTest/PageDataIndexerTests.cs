@@ -65,7 +65,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             contentRepositoryMock.Setup(x => x.Get<PageData>(new ContentReference(1), new CultureInfo("en")))
                 .Returns(new TestPage());
 
-            var elasticClientMock = CreateElasticClientMock();
+            var elasticClientMock = CreateElasticClientMock();            
 
             var pageDataIndexer = new PageDataIndexer(CreateLanguageBranchRepositoryMock().Object,
                 CreateTypeMapperResolverMock().Object,
@@ -75,6 +75,8 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             pageDataIndexer.IndexPageTree().ToList();
 
             elasticClientMock.Verify(x => x.Bulk(It.IsAny<IBulkRequest>()), Times.Exactly(2));
+            elasticClientMock.Verify(x => x.Bulk(It.Is<IBulkRequest>(b => b.Operations.Count == 2)), Times.Exactly(1));
+            elasticClientMock.Verify(x => x.Bulk(It.Is<IBulkRequest>(b => b.Operations.Count == 1)), Times.Exactly(1));
         }
 
         private static Mock<IIndexableTypeMapperResolver> CreateTypeMapperResolverMock()

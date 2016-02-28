@@ -91,7 +91,8 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 
                     if (bulkOperations.Count == Options.BulkSize || i == indexablePages.Length - 1)
                     {
-                        var bulkRequest = new BulkRequest(reIndexName) { Operations = bulkOperations };
+                        var bulkRequest = new BulkRequest(reIndexName) {Operations = new List<IBulkOperation>(bulkOperations)};
+
                         var bulkResponse = ElasticClient.Bulk(bulkRequest);
                         if (!bulkResponse.IsValid || bulkResponse.Errors)
                             hasErrors = true;
