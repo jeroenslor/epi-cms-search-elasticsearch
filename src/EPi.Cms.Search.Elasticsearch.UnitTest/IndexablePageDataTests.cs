@@ -39,9 +39,16 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
 
     public class TestPage : PageData, IIndexablePageData
     {
+        public virtual ContentArea TestContentArea { get; set; }
+                
         public IPageDataIndexModel CreateIndexModel(CultureInfo cultureInfo)
         {
-            return new TestPageIndexModel();
+            var indexModel = new TestPageIndexModel();
+            this.SetBaseProperties(indexModel);
+
+            indexModel.TestContentArea = TestContentArea.ToIndexableString(cultureInfo);
+
+            return indexModel;
         }
 
         public bool ShouldIndex(CultureInfo cultureInfo)
@@ -57,11 +64,24 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
         }
     }
 
+    public class TestBlock : BlockData, IIndexableBlockData
+    {
+
+        public virtual string Title { get; set; }
+        public virtual string Summary { get; set; }
+
+        public string ToIndexableString()
+        {
+            return $"{Title} {Summary}";
+        }
+    }
+
     public class TestPageIndexModel : IPageDataIndexModel
     {
         public Guid Id { get; set; }
         public string ContentReference { get; set; }
         public Guid? SiteDefinitionId { get; set; }
+        public string TestContentArea { get; set; }
     }
 
 }

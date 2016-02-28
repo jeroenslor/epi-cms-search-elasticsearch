@@ -14,6 +14,6 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 
             var siteDefinition = SiteDefinitionResolver.Service.GetDefinitionForContent(indexablePageDate.ContentLink, false, false);
             indexModel.SiteDefinitionId = siteDefinition?.Id;
-        }
+        }        
     }
 }
