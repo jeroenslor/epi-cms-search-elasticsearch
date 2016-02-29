@@ -6,15 +6,14 @@ using EPi.Cms.Search.Elasticsearch.Indexing.TypeMap;
 using EPiServer;
 using EPiServer.Core;
 using EPiServer.DataAbstraction;
-using EPiServer.Framework;
-using EPiServer.Framework.Initialization;
 using EPiServer.Logging;
+using EPiServer.ServiceLocation;
 using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
-    [InitializableModule]
-    public class PageDataIndexer : IPageDataIndexer, IInitializableModule
+    [ServiceConfiguration(typeof(IPageDataIndexer), Lifecycle = ServiceInstanceScope.Singleton)]
+    public class PageDataIndexer : IPageDataIndexer
     {
         protected readonly ILanguageBranchRepository LanguageBranchRepository;
         protected readonly IIndexableTypeMapperResolver TypeMapperResolver;
@@ -22,9 +21,11 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         protected readonly CmsElasticSearchOptions Options;
         private readonly IContentRepository _contentRepository;
         private readonly ILogger _logger;
-        protected readonly IIndexableTypeMapper[] IndexableTypeMappers;
+        protected readonly IIndexableTypeMapper[] IndexableTypeMappers;        
 
-        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository, IIndexableTypeMapperResolver typeMapperResolver, IElasticClient elasticClient, CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
+        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository,
+            IIndexableTypeMapperResolver typeMapperResolver, IElasticClient elasticClient,
+            CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
         {
             LanguageBranchRepository = languageBranchRepository;
             TypeMapperResolver = typeMapperResolver;
@@ -114,7 +115,16 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 
             return
                 ElasticClient.Delete(new DeleteRequest(GetAliasName(pageData.Language),
-                    TypeName.Create(indexablePageData.GetType()), indexablePageData.Id));
+                    TypeName.Create(indexablePageData.GetType()), pageData.ContentGuid));
+        }
+
+        public void InitializeIndex()
+        {
+            foreach (var languageBranch in LanguageBranchRepository.ListEnabled())
+            {
+                var language = languageBranch.Culture;
+                InitializeIndex(language);
+            }
         }
 
         private void InitializeIndex(CultureInfo language)
@@ -236,52 +246,6 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
             };
 
             return bulkCreateOperation;
-        }
-
-        public void Initialize(InitializationEngine context)
-        {
-            var options = context.Locate.Advanced.GetInstance<CmsElasticSearchOptions>();
-            if (!options.IsEnabled)
-                return;
-
-            // register content events
-            var contentEvents = context.Locate.ContentEvents();
-            contentEvents.SavingContent += ContentEventsOnSavingContent;
-            contentEvents.DeletingContent += ContentEventsOnDeletingContent;
-        }
-
-        private void ContentEventsOnDeletingContent(object sender, DeleteContentEventArgs deleteContentEventArgs)
-        {
-            var indexablePageData = deleteContentEventArgs.Content as IIndexablePageData;
-            if (indexablePageData == null)
-                return;
-
-            var deleteResponse = Delete(indexablePageData);
-            if (!deleteResponse.IsValid)
-                throw new InvalidOperationException(
-                    $"Failed to delete pagedata server error {deleteResponse.ServerError}, requestInfo {deleteResponse.DebugInformation}");
-        }
-
-        private void ContentEventsOnSavingContent(object sender, ContentEventArgs contentEventArgs)
-        {
-            var indexablePageData = contentEventArgs.Content as IIndexablePageData;
-            if (indexablePageData == null)
-                return;
-
-            if (!indexablePageData.ShouldIndex())
-                return;
-
-            var indexResponse = Index(indexablePageData);
-            if(!indexResponse.IsValid)
-                throw new InvalidOperationException(
-                    $"Failed to index pagedata server error {indexResponse.ServerError}, requestInfo {indexResponse.DebugInformation}");
-        }
-
-        public void Uninitialize(InitializationEngine context)
-        {
-            var contentEvents = context.Locate.ContentEvents();
-            contentEvents.SavingContent -= ContentEventsOnSavingContent;
-            contentEvents.DeletedContent -= ContentEventsOnDeletingContent;
-        }
+        }        
     }
 }

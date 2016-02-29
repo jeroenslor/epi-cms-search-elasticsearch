@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
@@ -16,5 +17,6 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 
         IIndexResponse Index(IIndexablePageData indexablePageData);
         IDeleteResponse Delete(IIndexablePageData indexablePageData);
+        void InitializeIndex();
     }
 }

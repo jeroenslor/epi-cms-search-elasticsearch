@@ -9,7 +9,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
     {
         private static Injected<SiteDefinitionResolver> SiteDefinitionResolver { get; } 
 
-        public static void SetBaseProperties(this IIndexablePageData indexablePageData, IPageDataIndexModel indexModel)
+        public static void SetIndexablePageDataProperties(this IIndexablePageData indexablePageData, IPageDataIndexModel indexModel)
         {
             var pageData = indexablePageData as PageData;
             if (pageData == null)
