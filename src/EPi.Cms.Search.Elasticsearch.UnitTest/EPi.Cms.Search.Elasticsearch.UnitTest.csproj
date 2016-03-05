@@ -180,6 +180,7 @@
     <Compile Include="DefaultCmsElasticSearchOptionsTests.cs" />
     <Compile Include="IndexablePageDataTests.cs" />
     <Compile Include="PageDataIndexerTests.cs" />
+    <Compile Include="TypeMapperTests.cs" />
     <Compile Include="TypeScanIndexableTypeMapperHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -28,7 +28,6 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             var elasticClientMock = CreateElasticClientMock();
 
             var pageDataIndexer = new PageDataIndexer(CreateLanguageBranchRepositoryMock().Object,
-                CreateTypeMapperResolverMock().Object,
                 elasticClientMock.Object, new CmsElasticSearchOptions(), contentRepositoryMock.Object,
                 new Mock<ILogger>().Object);
 
@@ -68,7 +67,6 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
             var elasticClientMock = CreateElasticClientMock();            
 
             var pageDataIndexer = new PageDataIndexer(CreateLanguageBranchRepositoryMock().Object,
-                CreateTypeMapperResolverMock().Object,
                 elasticClientMock.Object, new CmsElasticSearchOptions {BulkSize = 2}, contentRepositoryMock.Object,
                 new Mock<ILogger>().Object);
 

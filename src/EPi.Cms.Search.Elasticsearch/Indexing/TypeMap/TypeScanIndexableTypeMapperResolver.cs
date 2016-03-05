@@ -6,12 +6,12 @@ using EPiServer.ServiceLocation;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing.TypeMap
 {
-    [ServiceConfiguration(typeof(IIndexableTypeMapperResolver), Lifecycle = ServiceInstanceScope.Singleton)]
+    [ServiceConfiguration(typeof(IIndexableTypeMapperResolver))]
     public class TypeScanIndexableTypeMapperResolver : IIndexableTypeMapperResolver
     {
         public IEnumerable<IIndexableTypeMapper> GetAll()
         {
-            return GetTypesChildOf<IIndexableTypeMapper>().Select(Activator.CreateInstance).OfType<IIndexableTypeMapper>();
+            return GetTypesChildOf<IIndexableTypeMapper>().Where(x=>!x.Name.Contains("Proxy")).Select(Activator.CreateInstance).OfType<IIndexableTypeMapper>();
         }
 
         public static IEnumerable<Type> GetTypesChildOf<T>()

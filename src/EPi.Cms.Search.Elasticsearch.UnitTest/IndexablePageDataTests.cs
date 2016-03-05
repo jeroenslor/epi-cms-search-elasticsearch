@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using EPi.Cms.Search.Elasticsearch.Indexing;
+using EPi.Cms.Search.Elasticsearch.Indexing.TypeMap;
 using EPiServer.Core;
 using Nest;
 using Xunit;
@@ -37,7 +38,7 @@ namespace EPi.Cms.Search.Elasticsearch.UnitTest
         }
     }
 
-    public class TestPage : PageData, IIndexablePageData
+    public class TestPage : PageData, IIndexablePageData, IIndexableTypeMapper
     {
         public IPageDataIndexModel CreateIndexModel()
         {

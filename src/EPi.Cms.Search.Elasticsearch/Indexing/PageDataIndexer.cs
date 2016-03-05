@@ -12,7 +12,7 @@ using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
-    [ServiceConfiguration(typeof(IPageDataIndexer), Lifecycle = ServiceInstanceScope.Singleton)]
+    [ServiceConfiguration(typeof(IPageDataIndexer))]
     public class PageDataIndexer : IPageDataIndexer
     {
         protected readonly ILanguageBranchRepository LanguageBranchRepository;
@@ -21,20 +21,22 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         protected readonly CmsElasticSearchOptions Options;
         private readonly IContentRepository _contentRepository;
         private readonly ILogger _logger;
-        protected readonly IIndexableTypeMapper[] IndexableTypeMappers;        
+        protected static IIndexableTypeMapper[] IndexableTypeMappers;
 
-        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository,
-            IIndexableTypeMapperResolver typeMapperResolver, IElasticClient elasticClient,
+        static PageDataIndexer()
+        {
+            var indexableTypeMapperResolver = ServiceLocator.Current.GetInstance<IIndexableTypeMapperResolver>();
+            IndexableTypeMappers = indexableTypeMapperResolver.GetAll().ToArray();
+        }
+
+        public PageDataIndexer(ILanguageBranchRepository languageBranchRepository,IElasticClient elasticClient,
             CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
         {
             LanguageBranchRepository = languageBranchRepository;
-            TypeMapperResolver = typeMapperResolver;
             ElasticClient = elasticClient;
             Options = options;
             _contentRepository = contentRepository;
-            _logger = logger;
-
-            IndexableTypeMappers = TypeMapperResolver.GetAll().ToArray();
+            _logger = logger;            
         }
 
         /// <summary>
@@ -54,7 +56,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
                 var indexName1 = GetIndexName(language, 1);
                 var indexName2 = GetIndexName(language, 2);
 
-                var aliasIndices = ElasticClient.GetAlias(x => x.Alias(aliasName)).Indices;
+                var aliasIndices = ElasticClient.GetAlias(x => x.Name(aliasName)).Indices;
                 var liveIndexName = aliasIndices.First().Key;
                 var reIndexName = liveIndexName.Equals(indexName1) ? indexName2 : indexName1;
 

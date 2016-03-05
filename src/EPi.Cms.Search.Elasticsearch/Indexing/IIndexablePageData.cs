@@ -1,8 +1,6 @@
-using EPi.Cms.Search.Elasticsearch.Indexing.TypeMap;
-
 namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
-    public interface IIndexablePageData : IIndexableTypeMapper
+    public interface IIndexablePageData
     {
         IPageDataIndexModel CreateIndexModel();
         bool ShouldIndex();
