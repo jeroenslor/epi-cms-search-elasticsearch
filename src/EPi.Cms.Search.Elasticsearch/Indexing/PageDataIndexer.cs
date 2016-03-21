@@ -12,30 +12,24 @@ using Nest;
 
 namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
-    [ServiceConfiguration(typeof(IPageDataIndexer))]
+    [ServiceConfiguration(typeof(IPageDataIndexer), Lifecycle = ServiceInstanceScope.Singleton)]
     public class PageDataIndexer : IPageDataIndexer
     {
         protected readonly ILanguageBranchRepository LanguageBranchRepository;
-        protected readonly IIndexableTypeMapperResolver TypeMapperResolver;
         protected readonly IElasticClient ElasticClient;
         protected readonly CmsElasticSearchOptions Options;
         private readonly IContentRepository _contentRepository;
+        private readonly IIndexableTypeMapperResolver _indexableTypeMapperResolver;
         private readonly ILogger _logger;
-        protected static IIndexableTypeMapper[] IndexableTypeMappers;
-
-        static PageDataIndexer()
-        {
-            var indexableTypeMapperResolver = ServiceLocator.Current.GetInstance<IIndexableTypeMapperResolver>();
-            IndexableTypeMappers = indexableTypeMapperResolver.GetAll().ToArray();
-        }
 
         public PageDataIndexer(ILanguageBranchRepository languageBranchRepository,IElasticClient elasticClient,
-            CmsElasticSearchOptions options, IContentRepository contentRepository, ILogger logger)
+            CmsElasticSearchOptions options, IContentRepository contentRepository, IIndexableTypeMapperResolver indexableTypeMapperResolver, ILogger logger)
         {
             LanguageBranchRepository = languageBranchRepository;
             ElasticClient = elasticClient;
             Options = options;
             _contentRepository = contentRepository;
+            _indexableTypeMapperResolver = indexableTypeMapperResolver;
             _logger = logger;            
         }
 
@@ -165,9 +159,9 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 
         protected virtual IEnumerable<IIndexablePageData> GetIndexablePages(CultureInfo language)
         {
-            foreach (var pageReference in _contentRepository.GetDescendents(PageReference.RootPage))
+            foreach (var pageReference in _contentRepository.GetDescendents(ContentReference.RootPage))
             {
-                var indexablePageData = _contentRepository.Get<PageData>(pageReference, language) as IIndexablePageData;
+                var indexablePageData = _contentRepository.Get<IContent>(pageReference, language) as IIndexablePageData;
                 if (indexablePageData == null)
                     continue;
 
@@ -179,7 +173,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
         {
             var mappingsDescriptor = new MappingsDescriptor();
 
-            foreach (var indexableTypeMapper in IndexableTypeMappers)
+            foreach (var indexableTypeMapper in _indexableTypeMapperResolver.GetAll())
             {
                 var typeMapping = indexableTypeMapper.CreateTypeMapping(language);
                 mappingsDescriptor.Map<IIndexablePageData>(indexableTypeMapper.TypeName, x => typeMapping);

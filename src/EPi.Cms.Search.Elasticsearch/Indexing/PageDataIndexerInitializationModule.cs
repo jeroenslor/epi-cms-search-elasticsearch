@@ -8,7 +8,7 @@ namespace EPi.Cms.Search.Elasticsearch.Indexing
 {
     [InitializableModule]
     [ModuleDependency(typeof(EPiServer.Web.InitializationModule))]
-    public class PadeDataIndexerInitializationModule : IInitializableModule
+    public class PageDataIndexerInitializationModule : IInitializableModule
     {
         private IPageDataIndexer _pageDataIndexer;
 

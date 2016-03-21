@@ -164,7 +164,7 @@
     <Compile Include="Indexing\IndexablePageDataExtensions.cs" />
     <Compile Include="Indexing\IndexPageTreeJob.cs" />
     <Compile Include="Indexing\IPageDataIndexer.cs" />
-    <Compile Include="Indexing\PadeDataIndexerInitializationModule.cs" />
+    <Compile Include="Indexing\PageDataIndexerInitializationModule.cs" />
     <Compile Include="Indexing\PageDataIndexer.cs" />
     <Compile Include="Indexing\TypeMap\IIndexableTypeMapper.cs" />
     <Compile Include="Indexing\TypeMap\IIndexableTypeMapperResolver.cs" />
